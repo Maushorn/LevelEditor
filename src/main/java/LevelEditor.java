@@ -1,19 +1,14 @@
 import javafx.application.Application;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
-import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
-import javafx.scene.effect.BlendMode;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.*;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import lombok.NonNull;
 
 import java.net.URI;
 import java.nio.file.Paths;
@@ -42,18 +37,9 @@ public class LevelEditor extends Application {
         vBox.setPadding(new Insets(10));
         vBox.getChildren().add(startButton);
 
-        //Setting up working area
-//        Canvas canvas = new Canvas(500,500);
-//        Group canvasGroup = new Group(canvas);
-
         canvas = new Pane();
         canvas.setPrefSize(500,500);
 
-        URI imageURI = Paths.get("C:\\myrepos\\FencingPrincess\\Entwürfe\\Princess-1_big.png").toUri();
-        Image testImage = new Image(imageURI.toString());
-
-        URI imageURI2 = Paths.get("C:\\myrepos\\FencingPrincess\\Entwürfe\\Princess-1_big.png").toUri();
-        Image testImage2 = new Image(imageURI2.toString());
 
 
         Scene canvasScene = new Scene(canvas);
@@ -66,28 +52,16 @@ public class LevelEditor extends Application {
                 shiftPressed = false;
         });
 
+        //TODO: remove these 2 lines when importing from files is implemented
+        URI imageURI = Paths.get("C:\\myrepos\\FencingPrincess\\Entwürfe\\Princess-1_big.png").toUri();
+        Image testImage = new Image(imageURI.toString());
         ImageView imageView = new ImageView(testImage);
-        imageView.setPreserveRatio(true);
-        imageView.setFitWidth(256);
         canvas.getChildren().addAll(imageView);
-        imageView.setX(-50);
-
         addToDragObjects(imageView);
 
-//        GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
-//      TODO This works for resizing the image:
-//      graphicsContext.drawImage(testImage, 0, 0, testImage.getWidth()*2, testImage.getHeight()*2);
-
-
+        //Configuration for Start Menu
         Scene mainMenuScene = new Scene(vBox);
-        primaryStage.setScene(mainMenuScene);
-
-        startButton.setOnAction(new EventHandler<ActionEvent>() {
-            public void handle(ActionEvent event) {
-                primaryStage.setScene(canvasScene);
-            }
-        });
-
+        startButton.setOnAction(event -> primaryStage.setScene(canvasScene));
 
         canvas.setOnDragOver(event -> event.acceptTransferModes(TransferMode.COPY_OR_MOVE));
         canvas.setOnDragDropped(event -> {
@@ -107,17 +81,12 @@ public class LevelEditor extends Application {
             }
         });
 
-        //TODO
-//        canvas.setOnDragDropped(new EventHandler<DragEvent>() {
-//            public void handle(DragEvent event) {
-//                event.getS
-//            }
-//        });
-
+        primaryStage.setScene(mainMenuScene);
         primaryStage.show();
     }
 
-    private void addToDragObjects(ImageView imageView) {
+
+    private void addToDragObjects(@NonNull ImageView imageView) {
         imageView.setOnDragDetected(event -> {
             if(shiftPressed)
                 copyDrag = true;
@@ -127,12 +96,14 @@ public class LevelEditor extends Application {
             dragStartX = imageView.getX();
             dragStartY = imageView.getY();
             imageView.setStyle("-fx-opacity: 0.5;");
-
-            Dragboard dragboard = imageView.startDragAndDrop(TransferMode.ANY);
+            Dragboard dragboard = imageView.startDragAndDrop(TransferMode.COPY_OR_MOVE);
             ClipboardContent clipboardContent = new ClipboardContent();
             clipboardContent.putImage(imageView.getImage());
             dragboard.setContent(clipboardContent);
             event.consume();
+        });
+        imageView.setOnDragDone(event -> {
+            imageView.setStyle("-fx-opacity: 1.0;");
         });
 
     }
