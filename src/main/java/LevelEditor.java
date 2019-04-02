@@ -16,8 +16,8 @@ import java.nio.file.Paths;
 
 public class LevelEditor extends Application {
 
-    double dragStartX;
-    double dragStartY;
+//    double dragStartX; //TODO: unnecessary 2 lines?
+//    double dragStartY;
     ImageView currentlyDraggedImageView;
     Pane canvas;
     boolean shiftPressed;
@@ -52,9 +52,9 @@ public class LevelEditor extends Application {
                 shiftPressed = false;
         });
 
-        //TODO: remove these 2 lines when importing from files is implemented
-        URI imageURI = Paths.get("C:\\myrepos\\FencingPrincess\\Entwürfe\\Princess-1_big.png").toUri();
-        Image testImage = new Image(imageURI.toString());
+        //TODO: remove these lines when importing from files is implemented
+        URI testImageURI = Paths.get("C:\\myrepos\\FencingPrincess\\Entwürfe\\Princess-1_big.png").toUri();
+        Image testImage = new Image(testImageURI.toString());
         ImageView imageView = new ImageView(testImage);
         canvas.getChildren().addAll(imageView);
         addToDragObjects(imageView);
@@ -63,8 +63,15 @@ public class LevelEditor extends Application {
         Scene mainMenuScene = new Scene(vBox);
         startButton.setOnAction(event -> primaryStage.setScene(canvasScene));
 
-        canvas.setOnDragOver(event -> event.acceptTransferModes(TransferMode.COPY_OR_MOVE));
+        canvas.setOnDragOver(event -> event.acceptTransferModes(TransferMode.ANY));
         canvas.setOnDragDropped(event -> {
+            //TODO: Maybe implement check on file type.
+            if(event.getGestureSource() == null && event.getDragboard().hasFiles()){
+                ClipboardContent clipboardContent = new ClipboardContent();
+                URI imageURI = Paths.get(event.getDragboard().getFiles().get(0).getPath()).toUri();
+                clipboardContent.putImage(new Image(imageURI.toString()));
+                event.getDragboard().setContent(clipboardContent);
+            }
             if(event.getDragboard().hasImage()) {
                 ImageView tempImageView = new ImageView(event.getDragboard().getImage());
                 //Since the Drop gesture determines the upper left corner of the destination the image has to be placed
@@ -79,8 +86,8 @@ public class LevelEditor extends Application {
                 //TODO: remove this line
                 System.out.println(canvas.getChildren().size());
             }
+            else System.out.println("No Image!");
         });
-
         primaryStage.setScene(mainMenuScene);
         primaryStage.show();
     }
@@ -93,8 +100,9 @@ public class LevelEditor extends Application {
             else
                 copyDrag = false;
             currentlyDraggedImageView = imageView;
-            dragStartX = imageView.getX();
-            dragStartY = imageView.getY();
+            //TODO: I think these 2 uncommented lines are unnecessary.
+//            dragStartX = imageView.getX();
+//            dragStartY = imageView.getY();
             imageView.setStyle("-fx-opacity: 0.5;");
             Dragboard dragboard = imageView.startDragAndDrop(TransferMode.COPY_OR_MOVE);
             ClipboardContent clipboardContent = new ClipboardContent();
