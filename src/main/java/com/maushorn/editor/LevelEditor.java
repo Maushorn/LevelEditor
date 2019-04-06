@@ -1,3 +1,7 @@
+package com.maushorn.editor;
+
+import com.maushorn.level.Level;
+import com.maushorn.level.LevelElement;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -10,6 +14,11 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import lombok.NonNull;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.net.URI;
 import java.nio.file.Paths;
 
@@ -30,18 +39,31 @@ public class LevelEditor extends Application {
     @Override
     public void start(final Stage primaryStage) {
 
+        //TODO: Test xml-binding
+        Level level = new Level("Testlevel");
+        level.getGameObjects().add(new LevelElement("Player1"));
+        try {
+            JAXBContext context = JAXBContext.newInstance(Level.class);
+            Marshaller marshaller = context.createMarshaller();
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+            marshaller.marshal(level, new FileOutputStream("testlevel.xml"));
+        } catch (JAXBException e) {
+            e.printStackTrace();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        //TODO: Test xml-binding ENDE
+
         //Setting up main menu
         Button startButton = new Button("Start");
         startButton.setDefaultButton(true);
         VBox vBox = new VBox(5);
         vBox.setPadding(new Insets(10));
         vBox.getChildren().add(startButton);
-
         canvas = new Pane();
         canvas.setPrefSize(500,500);
 
-
-
+        //Check if SHIFT is pressed
         Scene canvasScene = new Scene(canvas);
         canvasScene.setOnKeyPressed(event -> {
             if(event.getCode() == KeyCode.SHIFT)
@@ -56,7 +78,7 @@ public class LevelEditor extends Application {
         URI testImageURI = Paths.get("C:\\myrepos\\FencingPrincess\\Entwürfe\\Princess-1_big.png").toUri();
         Image testImage = new Image(testImageURI.toString());
         ImageView imageView = new ImageView(testImage);
-        canvas.getChildren().addAll(imageView);
+        canvas.getChildren().add(imageView);
         addToDragObjects(imageView);
 
         //Configuration for Start Menu
@@ -83,10 +105,8 @@ public class LevelEditor extends Application {
                 currentlyDraggedImageView.setStyle("-fx-opacity: 1.0");
                 if(!copyDrag)
                     canvas.getChildren().remove(currentlyDraggedImageView);
-                //TODO: remove this line
-                System.out.println(canvas.getChildren().size());
+
             }
-            else System.out.println("No Image!");
         });
         primaryStage.setScene(mainMenuScene);
         primaryStage.show();
@@ -112,6 +132,7 @@ public class LevelEditor extends Application {
         });
         imageView.setOnDragDone(event -> {
             imageView.setStyle("-fx-opacity: 1.0;");
+            event.consume();
         });
 
     }

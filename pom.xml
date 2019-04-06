@@ -15,7 +15,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>LevelEditor</mainClass>
+                            <mainClass>com.maushorn.editor.LevelEditor</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

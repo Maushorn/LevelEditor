@@ -1,2 +1,2 @@
-# LevelEditor
-2D-Level Editor that exports XML files
+# com.maushorn.editor.LevelEditor
+2D-com.maushorn.level.Level Editor that exports XML files

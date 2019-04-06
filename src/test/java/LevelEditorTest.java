@@ -1,9 +1,9 @@
+import com.maushorn.editor.LevelEditor;
 import javafx.scene.image.ImageView;
 import org.easymock.EasyMockRule;
 import org.easymock.EasyMockSupport;
 import org.easymock.Mock;
 import org.easymock.TestSubject;
-import org.junit.Assert;
 import org.junit.Rule;
 import org.testng.annotations.Test;
 
