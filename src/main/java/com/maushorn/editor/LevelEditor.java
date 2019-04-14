@@ -21,16 +21,20 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.net.URI;
 import java.nio.file.Paths;
+import java.util.HashMap;
 
 
 public class LevelEditor extends Application {
 
 //    double dragStartX; //TODO: unnecessary 2 lines?
 //    double dragStartY;
-    ImageView currentlyDraggedImageView;
+    ImageView lastImageView;
+    ImageView currentImageView;
+    Image currentImage;
+    Level level;
+    LevelElement currentLevelElement;
     Pane canvas;
     boolean shiftPressed;
-    boolean copyDrag;
 
     public static void main(String[] args) {
         launch(args);
@@ -39,19 +43,20 @@ public class LevelEditor extends Application {
     @Override
     public void start(final Stage primaryStage) {
 
-        //TODO: Test xml-binding
-        Level level = new Level("Testlevel");
-        level.getGameObjects().add(new LevelElement("Player1"));
-        try {
-            JAXBContext context = JAXBContext.newInstance(Level.class);
-            Marshaller marshaller = context.createMarshaller();
-            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-            marshaller.marshal(level, new FileOutputStream("testlevel.xml"));
-        } catch (JAXBException e) {
-            e.printStackTrace();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+        //TODO: Testing
+        level = new Level("Testlevel");
+//        TODO: Test xml-binding
+//        level.getLevelelements().put(new ImageView(),new LevelElement("Player1"));
+//        try {
+//            JAXBContext context = JAXBContext.newInstance(Level.class);
+//            Marshaller marshaller = context.createMarshaller();
+//            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+//            marshaller.marshal(level, new FileOutputStream("testlevel.xml"));
+//        } catch (JAXBException e) {
+//            e.printStackTrace();
+//        } catch (FileNotFoundException e) {
+//            e.printStackTrace();
+//        }
         //TODO: Test xml-binding ENDE
 
         //Setting up main menu
@@ -77,9 +82,13 @@ public class LevelEditor extends Application {
         //TODO: remove these lines when importing from files is implemented
         URI testImageURI = Paths.get("C:\\myrepos\\FencingPrincess\\Entwürfe\\Princess-1_big.png").toUri();
         Image testImage = new Image(testImageURI.toString());
-        ImageView imageView = new ImageView(testImage);
-        canvas.getChildren().add(imageView);
-        addToDragObjects(imageView);
+        ImageView testImageView = new ImageView(testImage);
+        canvas.getChildren().add(testImageView);
+        currentImageView = testImageView;
+        addToDragObjects(testImageView);
+        LevelElement testElement = new LevelElement("Test");
+        testElement.setSpriteURI(Paths.get("C:\\myrepos\\FencingPrincess\\Entwürfe\\Princess-1_big.png").toUri());
+        level.getLevelelements().put(testImageView, testElement);
 
         //Configuration for Start Menu
         Scene mainMenuScene = new Scene(vBox);
@@ -91,22 +100,27 @@ public class LevelEditor extends Application {
             if(event.getGestureSource() == null && event.getDragboard().hasFiles()){
                 ClipboardContent clipboardContent = new ClipboardContent();
                 URI imageURI = Paths.get(event.getDragboard().getFiles().get(0).getPath()).toUri();
-                clipboardContent.putImage(new Image(imageURI.toString()));
+                currentImage = new Image(imageURI.toString());
+                clipboardContent.putImage(currentImage);
                 event.getDragboard().setContent(clipboardContent);
+                currentImageView = new ImageView(currentImage);
+                level.getLevelelements().put(currentImageView, new LevelElement(Paths.get(imageURI).getFileName().toString()));
             }
             if(event.getDragboard().hasImage()) {
-                ImageView tempImageView = new ImageView(event.getDragboard().getImage());
                 //Since the Drop gesture determines the upper left corner of the destination the image has to be placed
                 //half its height higher and half its width left of the mouse cursor.
-                tempImageView.setX(event.getX() - event.getDragboard().getImage().getWidth()/2);
-                tempImageView.setY(event.getY() - event.getDragboard().getImage().getHeight()/2);
-                canvas.getChildren().add(tempImageView);
-                addToDragObjects(tempImageView);
-                currentlyDraggedImageView.setStyle("-fx-opacity: 1.0");
-                if(!copyDrag)
-                    canvas.getChildren().remove(currentlyDraggedImageView);
+                currentImageView.setX(event.getX() - event.getDragboard().getImage().getWidth()/2);
+                currentImageView.setY(event.getY() - event.getDragboard().getImage().getHeight()/2);
 
-            }
+                currentLevelElement.getCoordinates().setX((float)currentImageView.getX());
+                currentLevelElement.getCoordinates().setY((float)currentImageView.getY());
+
+                if (!canvas.getChildren().contains(currentImageView))
+                    canvas.getChildren().add(currentImageView);
+                addToDragObjects(currentImageView);
+                if(!level.getLevelelements().containsKey(currentImageView))
+                    level.getLevelelements().put(currentImageView, currentLevelElement);
+                }
         });
         primaryStage.setScene(mainMenuScene);
         primaryStage.show();
@@ -115,23 +129,33 @@ public class LevelEditor extends Application {
 
     private void addToDragObjects(@NonNull ImageView imageView) {
         imageView.setOnDragDetected(event -> {
-            if(shiftPressed)
-                copyDrag = true;
-            else
-                copyDrag = false;
-            currentlyDraggedImageView = imageView;
-            //TODO: I think these 2 uncommented lines are unnecessary.
-//            dragStartX = imageView.getX();
-//            dragStartY = imageView.getY();
-            imageView.setStyle("-fx-opacity: 0.5;");
-            Dragboard dragboard = imageView.startDragAndDrop(TransferMode.COPY_OR_MOVE);
+            lastImageView = imageView;
+            lastImageView.setStyle("-fx-opacity: 0.5;");
+            currentImage = imageView.getImage();
+            currentLevelElement = level.getLevelelements().get(currentImageView);
+            Dragboard dragboard;
+            if(shiftPressed) {
+                dragboard = imageView.startDragAndDrop(TransferMode.COPY);
+//                currentImage = new Image(currentLevelElement.getSpriteURI().toString());
+                currentImageView = new ImageView(currentImage);
+                addToDragObjects(currentImageView);
+                //TODO: Implement name input.
+                currentLevelElement = new LevelElement("Testname");
+            }
+            else {
+                dragboard = imageView.startDragAndDrop(TransferMode.MOVE);
+                currentImage = imageView.getImage();
+                currentImageView = imageView;
+            }
             ClipboardContent clipboardContent = new ClipboardContent();
-            clipboardContent.putImage(imageView.getImage());
+            clipboardContent.putImage(currentImage);
             dragboard.setContent(clipboardContent);
             event.consume();
         });
         imageView.setOnDragDone(event -> {
-            imageView.setStyle("-fx-opacity: 1.0;");
+            lastImageView.setStyle("-fx-opacity: 1.0;");
+            //TODO: Testoutput
+            level.getLevelelements().forEach((image, levelElement) -> System.out.println(levelElement.getName() + " " + levelElement.getCoordinates()));
             event.consume();
         });
 
