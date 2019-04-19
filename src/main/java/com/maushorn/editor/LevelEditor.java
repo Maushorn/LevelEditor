@@ -65,6 +65,7 @@ public class LevelEditor extends Application {
         VBox vBox = new VBox(5);
         vBox.setPadding(new Insets(10));
         vBox.getChildren().add(startButton);
+
         canvas = new Pane();
         canvas.setPrefSize(500,500);
 
@@ -156,6 +157,7 @@ public class LevelEditor extends Application {
             lastImageView.setStyle("-fx-opacity: 1.0;");
             //TODO: Testoutput
             level.getLevelelements().forEach((image, levelElement) -> System.out.println(levelElement.getName() + " " + levelElement.getCoordinates()));
+
             event.consume();
         });
 
